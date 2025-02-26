@@ -177,9 +177,7 @@ ${patientMessage}
 Medical Context:
 ${formatMedicalContext(patientData)}
 
-Please provide:
-1. A brief summary of the patient's concern
-2. Clinical relevance of their medical history to this message
+Please provide any clinical relevance of their medical history to this message.  Keep it short and concise.
 `;
 }
 
