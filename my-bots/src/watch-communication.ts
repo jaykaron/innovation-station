@@ -50,7 +50,7 @@ async function augmentCommunication(communcation: Communication, event: BotEvent
         });
         const contentString = communcation.payload?.[0]?.contentString;
         if (contentString) {
-            const summary = await claude.summarizePatientMessage(contentString);
+            const summary = await claude.getPatientMessageSummary(contentString);
             const notes = communcation.note ?? [];
             notes.push({
                 text: "AI Generated Summary:\n\n" + summary.content[0].text,
