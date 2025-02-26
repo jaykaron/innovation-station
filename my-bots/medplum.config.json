@@ -1,0 +1,16 @@
+{
+  "bots": [
+    {
+      "name": "hello-patient",
+      "id": "01953d8c-9f0a-7421-9e0c-dfdadca478cb",
+      "source": "src/hello-patient.ts",
+      "dist": "dist/hello-patient.js"
+    },
+    {
+      "name": "watch-patient-communication",
+      "id": "01953079-68be-70cb-96c9-53ba6016bd93",
+      "source": "src/watch-communication.ts",
+      "dist": "dist/watch-communication.js"
+    }
+  ]
+}
