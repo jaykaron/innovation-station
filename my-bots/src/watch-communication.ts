@@ -65,6 +65,7 @@ async function augmentCommunication(communcation: Communication, event: BotEvent
             const summary = await claude.getPatientMessageSummary(contentString);
             const patientSummary = await claude.getUserMessageFromPrompt(analysisPrompt, [], contentString);
             const priority = await claude.getPriorityFromPatientMessage(contentString);
+            const topic = await claude.getCommunicationTopicFromPatientMessage(contentString);
             const notes = communcation.note ?? [];
             notes.push({
                 text: "AI Generated Summary:\n\n" + summary.content[0].text,
@@ -78,6 +79,7 @@ async function augmentCommunication(communcation: Communication, event: BotEvent
                 authorReference: botReference
             });
             communcation.priority = priority.content[0].text;
+            communcation.topic = topic.content[0].text;
             communcation.note = notes;
         }
         return communcation;
