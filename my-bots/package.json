@@ -13,7 +13,8 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:ui": "vitest --ui",
-    "medplum": "medplum"
+    "medplum": "medplum",
+    "ts-node": "ts-node"
   },
   "prettier": {
     "printWidth": 120,
@@ -52,8 +53,5 @@
     "stripe": "17.6.0",
     "typescript": "5.7.3",
     "vitest": "3.0.5"
-  },
-  "dependencies": {
-    "@anthropic-ai/sdk": "^0.37.0"
   }
 }
