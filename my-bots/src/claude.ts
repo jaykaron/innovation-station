@@ -1,4 +1,4 @@
-import https, { request } from 'https';
+import https from 'https';
 import { COMMUNICATION_TOPIC_FROM_PATIENT_MESSAGE_VARIABLES, PATIENT_MESSAGE_SUMMARY_VARIABLES, PRIORITY_FROM_PATIENT_MESSAGE_VARIABLES, PromptVariable, TASK_CODE_FROM_PATIENT_MESSAGE_VARIABLES, TASK_DESCRIPTION_FROM_PATIENT_MESSAGE_VARIABLES } from './prompt-variables';
 
 export interface ClaudeConfig {
@@ -95,6 +95,7 @@ private makeRequest(data: any): Promise<any> {
         Urgent messages are requests that should be actioned promptly - higher priority than routine.
         ASAP messages are requests that should be actioned as soon as possible - higher priority than urgent.
         Stat messages are requests that should be actioned immediately - highest possible priority. E.g. an emergency.
+        Only output the priority without a rationale.
         Below are three examples:
         {{message1}}
         {{priority1}}
@@ -180,7 +181,7 @@ private makeRequest(data: any): Promise<any> {
     return this.getUserMessageFromPrompt(prompt, TASK_CODE_FROM_PATIENT_MESSAGE_VARIABLES, message);
   }
 
-  getUserMessageFromPrompt(prompt: string, promptVariables: PromptVariable[], message: string) {
+  getUserMessageFromPrompt(prompt: string, promptVariables: PromptVariable[], message: string): Promise<any> {
     const promptWithVariables = promptVariables.reduce((acc, variable) => {
       return acc.replace(variable.replacementToken, variable.value);
     }, prompt);
