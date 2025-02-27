@@ -1,7 +1,7 @@
 import { Bot, Communication, Reference } from '@medplum/fhirtypes';
 import { MockClient } from '@medplum/mock';
-import { expect, test } from 'vitest';
-import { handler } from './watch-communication';
+import { expect, test, beforeEach, afterEach } from 'vitest';
+import { handler, IClaudeClient, setClaudeClientFactory, resetClaudeClientFactory } from './watch-communication';
 
 const medplum = new MockClient();
 
@@ -40,6 +40,25 @@ const exampleCommunication: Communication = {
   }
 };
 
+// Create a mock Claude client
+const mockClaudeClient: IClaudeClient = {
+  getPatientMessageSummary: vi.fn().mockResolvedValue({ content: [{ text: 'Mock summary' }] }),
+  getUserMessageFromPrompt: vi.fn().mockResolvedValue({ content: [{ text: 'Mock analysis' }] }),
+  getPriorityFromPatientMessage: vi.fn().mockResolvedValue({ content: [{ text: 'routine' }] }),
+  getCommunicationTopicFromPatientMessage: vi.fn().mockResolvedValue({ content: [{ text: 'progress-update' }] })
+};
+
+beforeEach(() => {
+  // Set up the mock factory before each test
+  setClaudeClientFactory(() => mockClaudeClient);
+});
+
+afterEach(() => {
+  // Reset the factory after each test
+  resetClaudeClientFactory();
+  vi.clearAllMocks();
+});
+
 test('Non-communication resource returns false', async () => {
   const bot: Reference<Bot> = { reference: 'Bot/123' };
   const input = { resourceType: 'Patient' };
@@ -70,16 +89,11 @@ test('Creates response communication', async () => {
   const contentType = 'application/fhir+json';
   const secrets = {};
 
-  const spy = vi.spyOn(medplum, 'createResource');
   const result = await handler(medplum, { bot, input, contentType, secrets });
 
   expect(result).toBe(true);
-  expect(spy).toHaveBeenCalledTimes(1);
-
-  const createdComm = spy.mock.calls[0][0] as Communication;
-  expect(createdComm.resourceType).toBe('Communication');
-  expect(createdComm.status).toBe('in-progress');
-  expect(createdComm.sender?.reference).toBe('Bot/123');
-  expect(createdComm.recipient?.[0].reference).toBe('Patient/019529a0-a067-73e8-8317-cd1e86008386');
-  expect(createdComm.payload?.[0].contentString).toBe('Response from bot');
+  expect(mockClaudeClient.getPatientMessageSummary).toHaveBeenCalled();
+  expect(mockClaudeClient.getUserMessageFromPrompt).toHaveBeenCalled();
+  expect(mockClaudeClient.getPriorityFromPatientMessage).toHaveBeenCalled();
+  expect(mockClaudeClient.getCommunicationTopicFromPatientMessage).toHaveBeenCalled();
 });

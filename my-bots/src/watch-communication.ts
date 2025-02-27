@@ -4,6 +4,27 @@ import { ClaudeClient } from './claude';
 
 // See test file for example Communication resource
 
+// Add this interface to define the methods we need from ClaudeClient
+export interface IClaudeClient {
+  getPatientMessageSummary(message: string): Promise<any>;
+  getUserMessageFromPrompt(prompt: string, promptVariables: any[], message: string): Promise<any>;
+  getPriorityFromPatientMessage(message: string): Promise<any>;
+  getCommunicationTopicFromPatientMessage(message: string): Promise<any>;
+}
+
+// Default factory that can be overridden in tests
+let claudeClientFactory = (apiKey: string): IClaudeClient => new ClaudeClient({ apiKey });
+
+// Export function to set the factory for testing
+export function setClaudeClientFactory(factory: (apiKey: string) => IClaudeClient): void {
+  claudeClientFactory = factory;
+}
+
+// Reset function to restore the default factory (useful for after tests)
+export function resetClaudeClientFactory(): void {
+  claudeClientFactory = (apiKey: string): IClaudeClient => new ClaudeClient({ apiKey });
+}
+
 export async function handler(medplum: MedplumClient, event: BotEvent): Promise<any> {
     if (isResource(event.input, "Communication")) {
         console.log("Communication received");
@@ -57,9 +78,8 @@ async function augmentCommunication(communcation: Communication, event: BotEvent
             console.log("Anthropic API key not found");
             return communcation;
         }
-        const claude = new ClaudeClient({
-            apiKey: anthropicApiKey
-        });
+        const claude = claudeClientFactory(anthropicApiKey);
+       
         const contentString = communcation.payload?.[0]?.contentString;
         if (contentString) {
             const summary = await claude.getPatientMessageSummary(contentString);
