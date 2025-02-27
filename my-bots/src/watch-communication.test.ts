@@ -5,6 +5,75 @@ import { handler, IClaudeClient, setClaudeClientFactory, resetClaudeClientFactor
 
 const medplum = new MockClient();
 
+// Add mock bundle data
+const mockBundle = {
+  resourceType: 'Bundle',
+  type: 'searchset',
+  entry: [
+    {
+      resource: {
+        resourceType: 'Condition',
+        clinicalStatus: {
+          coding: [{ code: 'active' }]
+        },
+        code: {
+          coding: [{ code: 'M54.5', display: 'Low back pain' }],
+          text: 'Low back pain'
+        },
+        onsetDateTime: '2023-01-15'
+      }
+    },
+    {
+      resource: {
+        resourceType: 'AllergyIntolerance',
+        clinicalStatus: {
+          coding: [{ code: 'active' }]
+        },
+        code: {
+          coding: [{ display: 'Peanuts' }],
+          text: 'Peanut allergy'
+        },
+        reaction: [{ severity: 'severe' }]
+      }
+    },
+    {
+      resource: {
+        resourceType: 'MedicationRequest',
+        status: 'active',
+        medicationCodeableConcept: {
+          text: 'Ibuprofen 400mg'
+        }
+      }
+    },
+    {
+      resource: {
+        resourceType: 'Observation',
+        status: 'final',
+        code: {
+          text: 'Blood Pressure'
+        },
+        valueQuantity: {
+          value: 120,
+          unit: 'mmHg'
+        },
+        effectiveDateTime: '2024-02-20'
+      }
+    },
+    {
+      resource: {
+        resourceType: 'ServiceRequest',
+        status: 'active',
+        code: {
+          text: 'X-Ray right arm'
+        }
+      }
+    }
+  ]
+};
+
+// Mock the readPatientEverything method
+medplum.readPatientEverything = vi.fn().mockResolvedValue(mockBundle);
+
 const exampleCommunication: Communication = {
   "resourceType": "Communication",
   "status": "in-progress",
@@ -83,15 +152,21 @@ test('Non-patient sender returns false', async () => {
   expect(result).toBe(false);
 });
 
-test('Creates response communication', async () => {
+test('Creates response communication with AI analysis', async () => {
   const bot: Reference<Bot> = { reference: 'Bot/123' };
   const input = exampleCommunication;
   const contentType = 'application/fhir+json';
-  const secrets = {};
+  const secrets = {
+    ANTHROPIC_API_KEY: {
+      name: "ANTHROPIC_API_KEY", 
+      valueString: "mock-key"
+    }
+  };
 
   const result = await handler(medplum, { bot, input, contentType, secrets });
 
   expect(result).toBe(true);
+  expect(medplum.readPatientEverything).toHaveBeenCalledWith('019529a0-a067-73e8-8317-cd1e86008386');
   expect(mockClaudeClient.getPatientMessageSummary).toHaveBeenCalled();
   expect(mockClaudeClient.getUserMessageFromPrompt).toHaveBeenCalled();
   expect(mockClaudeClient.getPriorityFromPatientMessage).toHaveBeenCalled();
